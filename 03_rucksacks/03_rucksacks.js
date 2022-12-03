@@ -50,5 +50,19 @@ function sumRucksacksPriorities(rucksacks) {
     return sum;
 }
 
+function sumGroupsPriorities(rucksacks) {
+    let sum = 0;
+    for (let i = 0; i < rucksacks.length; i += 3) {
+        if (rucksacks[i].length === 0) continue;
+        // we don't care about compartments, so find duplicates in first 2 rucksacks
+        let duplicates = findDuplicateSupplies([rucksacks[i], rucksacks[i+1]]);
+        // find duplicates with the last rucksack
+        duplicates = findDuplicateSupplies([duplicates, rucksacks[i+2]]);
+        sum += sumPriorityValues(duplicates);
+    }
+    return sum;
+}
+
 const input = fs.readFileSync('input.txt', 'utf8').split('\r\n');
 console.log(sumRucksacksPriorities(input));
+console.log(sumGroupsPriorities(input));
