@@ -45,3 +45,4 @@ function getIndexOfUniqueLetterSequence(wholeString, numberOfLetters) {
 
 const input = fs.readFileSync('input.txt', 'utf8').split('\r\n');
 console.log(getIndexOfUniqueLetterSequence(input[0], 4));
+console.log(getIndexOfUniqueLetterSequence(input[0], 14));
