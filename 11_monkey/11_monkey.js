@@ -20,7 +20,7 @@ function monkeyTurn(monkey, divideBy) {
         monkey.inspectedCount++;
         let newWorryLevel;
         if (divideBy === 1) newWorryLevel = monkey.operation(monkey.items[i]);
-        else newWorryLevel = Math.floor(monkey.operation(monkey.items[i]) / divideBy);
+        else newWorryLevel = Math.floor(Number(monkey.operation(monkey.items[i])) / divideBy).toString();
         monkey.items[i] = newWorryLevel;
         monkeyIndexes.push(monkey.action(monkey.items[i]));
     }
@@ -36,8 +36,13 @@ function monkeysRound(monkeys, divideBy) {
 }
 
 function playRounds(monkeys, roundCount, divideBy = 3) {
+    let startTime = Date.now();
     for (let i = 0; i < roundCount; i++) {
         monkeysRound(monkeys, divideBy);
+        if (i % 100 === 0) {
+            console.log(`Round ${i} done in ${Date.now() - startTime} ms`);
+            startTime = Date.now();
+        }
     }
 }
 
@@ -105,7 +110,7 @@ const multiply = (a, b) => {
         const currentBig = Number(biggerNumber[biggerNumber.length - 1 - i]);
         for (let j = smallerNumber.length - 1; j >= 0; j--) {
             const numberRes = currentBig * Number(smallerNumber[j]) + carryOns[smallerNumber.length - 1 - j];
-            carryOns[smallerNumber.length - 1 - i] = pushAndGetCarryOn(numberRes, numbersToSum[smallerNumber.length - 1 - j]);
+            carryOns[smallerNumber.length - 1 - j] = pushAndGetCarryOn(numberRes, numbersToSum[smallerNumber.length - 1 - j]);
         }
     }
     for (let i = 0; i < numbersToSum.length; i++) {
@@ -148,7 +153,7 @@ function createOperation(operationInput) {
 
 function createAction(divisibleTestNumber, trueActionNumber, falseActionNumber) {
     return (worryLevel) => {
-        const division = divide(worryLevel, divisibleTestNumber);
+        const division = divide(worryLevel, divisibleTestNumber.toString());
         return division.rest === 0 ? trueActionNumber : falseActionNumber;
     }
 }
@@ -186,7 +191,7 @@ if (input[input.length - 1].length === 0) input.pop();
 // console.log(getMonkeyBusiness(monkeysPartOne, 2));
 
 const monkeysPartTwo = getMonkeysFromInput(input)
-playRounds(monkeysPartTwo, 20, 1);
+playRounds(monkeysPartTwo, 10000, 1);
 console.log(monkeysPartTwo[0].inspectedCount);
 console.log(monkeysPartTwo[1].inspectedCount);
 console.log(monkeysPartTwo[2].inspectedCount);
