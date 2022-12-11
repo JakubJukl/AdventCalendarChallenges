@@ -2,7 +2,7 @@ const fs = require('fs');
 
 class Monkey {
     /**
-     * @param {number[]} items monkey inventory
+     * @param {string[]} items monkey inventory
      * @param {function(worryLevel: string): string} operation modify worry level after inspection
      * @param {function(worryLevel: string): number} action to which monkey throw the item
      */
@@ -18,7 +18,10 @@ function monkeyTurn(monkey, divideBy) {
     const monkeyIndexes = [];
     for (let i = 0; i < monkey.items.length; i++) {
         monkey.inspectedCount++;
-        monkey.items[i] = Math.floor(monkey.operation(monkey.items[i]) / divideBy);
+        let newWorryLevel;
+        if (divideBy === 1) newWorryLevel = monkey.operation(monkey.items[i]);
+        else newWorryLevel = Math.floor(monkey.operation(monkey.items[i]) / divideBy);
+        monkey.items[i] = newWorryLevel;
         monkeyIndexes.push(monkey.action(monkey.items[i]));
     }
     return monkeyIndexes;
@@ -116,6 +119,20 @@ const multiply = (a, b) => {
     return result;
 }
 
+const divide = (a, b) => {
+    if (b === '0') throw new Error('Cannot divide by 0');
+    let carryOn = 0;
+    const result = [];
+    for (let i = 0; i < a.length; i++) {
+        const current = Number(a[i]) + carryOn * 10;
+        carryOn = current % Number(b);
+        const division = Math.floor(current / Number(b));
+        if (division !== 0 || result.length !== 0) result.push(division);
+    }
+    if (!result.length) result.push(0);
+    return {division: result.join(''), rest: carryOn};
+}
+
 operationMatrix = {
     '+': sum,
     '*': multiply,
@@ -131,7 +148,8 @@ function createOperation(operationInput) {
 
 function createAction(divisibleTestNumber, trueActionNumber, falseActionNumber) {
     return (worryLevel) => {
-        return worryLevel % divisibleTestNumber === 0 ? trueActionNumber : falseActionNumber;
+        const division = divide(worryLevel, divisibleTestNumber);
+        return division.rest === 0 ? trueActionNumber : falseActionNumber;
     }
 }
 
@@ -140,7 +158,9 @@ function getMonkeysFromInput(inputRows) {
     for (let i = 0; i < inputRows.length; i+=7) {
         // 0th line is monkey index, idc about that
         // 1st line is list of items
-        const items = inputRows[i + 1].substring(18).split(', ').map(Number);
+        const items = inputRows[i + 1].substring(18).split(', ').map(x => {
+            return Number(x).toString();
+        });
         // 2nd line is operation
         const operationInput = inputRows[i + 2].substring(19).split(' ');
         const operation = createOperation(operationInput);
@@ -166,10 +186,10 @@ if (input[input.length - 1].length === 0) input.pop();
 // console.log(getMonkeyBusiness(monkeysPartOne, 2));
 
 const monkeysPartTwo = getMonkeysFromInput(input)
-// playRounds(monkeysPartTwo, 1, 1);
-// console.log(monkeysPartTwo[0].inspectedCount);
-// console.log(monkeysPartTwo[1].inspectedCount);
-// console.log(monkeysPartTwo[2].inspectedCount);
-// console.log(monkeysPartTwo[3].inspectedCount);
+playRounds(monkeysPartTwo, 20, 1);
+console.log(monkeysPartTwo[0].inspectedCount);
+console.log(monkeysPartTwo[1].inspectedCount);
+console.log(monkeysPartTwo[2].inspectedCount);
+console.log(monkeysPartTwo[3].inspectedCount);
 // console.log(getMonkeyBusiness(monkeysPartTwo, 2));
 
