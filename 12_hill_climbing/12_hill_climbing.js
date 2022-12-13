@@ -118,7 +118,7 @@ function findPath(inputRows) {
 }
 
 function findShortestToElevationPoint(inputRows, elevationPoint) {
-    const [start, end] = findStartAndEnd(inputRows);
+    const [_, end] = findStartAndEnd(inputRows);
     let final = bfs(inputRows, end, null, elevationPoint);
     return countSteps(final);
 }
