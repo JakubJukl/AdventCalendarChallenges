@@ -79,38 +79,15 @@ function visitedKey(position) {
     return `${position.line},${position.column}`;
 }
 
-function deepCopy(obj) {
-    return JSON.parse(JSON.stringify(obj));
-}
-
-function dfs(inputRows, start, end, visited, shortestPath, recursionDepth = 0) {
-    if (recursionDepth >= shortestPath || (start.line === end.line && start.column === end.column)) {
-        return shortestPath < recursionDepth ? [shortestPath, false] : [recursionDepth, true];
-    } else {
-        const moves = getPossibleMoves(start, inputRows);
-        let tempShortestPath = shortestPath;
-        let foundPath = false;
-        for (let i = 0; i < moves.length; i++) {
-            if (visited[visitedKey(moves[i])] === undefined) {
-                visited[visitedKey(moves[i])] = true;
-                const newVisited = deepCopy(visited);
-                let [movePath, moveFound] = dfs(inputRows, moves[i], end, newVisited, tempShortestPath, recursionDepth + 1);
-                if (moveFound) foundPath = true;
-                if (movePath < tempShortestPath) tempShortestPath = movePath;
-            }
-        }
-        return [tempShortestPath, foundPath];
-    }
-}
-
-function bfs(inputRows, start, end) {
+function bfs(inputRows, start, end, elevationPoint = 0) {
     const queue = new Queue();
     queue.enqueue(start);
     const visited = {};
     visited[visitedKey(start)] = true;
     while (!queue.isEmpty()) {
         const position = queue.dequeue();
-        if (position.line === end.line && position.column === end.column) {
+        if ((end && position.line === end.line && position.column === end.column) ||
+            (elevationPoint && position.characterCode === elevationPoint)) {
             return position;
         } else {
             const moves = getPossibleMoves(position, inputRows);
@@ -125,41 +102,31 @@ function bfs(inputRows, start, end) {
     }
 }
 
-function replaceAt(string, index, replacement) {
-    return string.substring(0, index) + replacement + string.substring(index + replacement.length);
-}
-
-function visualize(inputRows, currentPosition) {
-    // process.stdout.write('\x1Bc');
-    const parent = currentPosition.parent ? currentPosition.parent : currentPosition;
-    const outputRows = [];
-    for (let i = 0; i < inputRows.length; i++) {
-        outputRows.push(inputRows[i]);
-        if (i === parent.line) outputRows[i] = replaceAt(inputRows[i], parent.column, 'P');
-        if (i === currentPosition.line) outputRows[i] = replaceAt(inputRows[i], parent.column, '*');
+function countSteps(position) {
+    let pathLength = 0;
+    while (position.parent) {
+        pathLength++;
+        position = position.parent;
     }
-    console.log(outputRows.join('\n'));
-    console.log('---------------------');
-
+    return pathLength;
 }
 
 function findPath(inputRows) {
     const [start, end] = findStartAndEnd(inputRows);
     let final = bfs(inputRows, end, start);
-    let pathLength = 0;
-    while (final.parent) {
-        pathLength++;
-        final = final.parent;
-    }
-    return pathLength;
-    // const visited = {};
-    // visited[visitedKey(end)] = true;
-    // dfs(inputRows, end, start, visited, Number.MAX_SAFE_INTEGER);
+    return countSteps(final);
+}
+
+function findShortestToElevationPoint(inputRows, elevationPoint) {
+    const [start, end] = findStartAndEnd(inputRows);
+    let final = bfs(inputRows, end, null, elevationPoint);
+    return countSteps(final);
 }
 
 
 const input = fs.readFileSync('input.txt', 'utf8').split('\r\n');
 if (input[input.length - 1].length === 0) input.pop();
 console.log(findPath(input));
+console.log(findShortestToElevationPoint(input, 97));
 
 
