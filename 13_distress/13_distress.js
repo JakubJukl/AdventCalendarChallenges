@@ -87,19 +87,49 @@ function isOrdered([left, right]) {
 
 function countOrdered(parsedInput) {
     let count = 0;
-    let rightIndexes = [];
     for (let pairIndex = 0; pairIndex < parsedInput.length; pairIndex++) {
         let [order, _] = isOrdered(parsedInput[pairIndex]);
         if (order === 1) {
             count += pairIndex + 1;
-            rightIndexes.push(pairIndex);
         }
     }
-    console.log(rightIndexes);
     return count;
+}
+
+function findIndexesOfPackets(parsedInput) {
+    const indexes = [[], []];
+    for (let i = 0; i < parsedInput.length; i++) {
+        for (let j = 0; j < 2; j++) {
+            for (let k = 0; k < 2; k++) {
+                let orderedPackets = createSortPackets();
+                if (isOrdered([parsedInput[i][j], orderedPackets[k]])[0] === 1) {
+                    indexes[k].push(2 * i + j);
+                    break;
+                }
+            }
+        }
+    }
+    return indexes;
+}
+
+function calculateIndexCoef(parsedInput) {
+    const indexes = findIndexesOfPackets(parsedInput);
+    return (indexes[0].length + 1) * (indexes[0].length + 1 + indexes[1].length + 1);
+}
+
+function createSortPackets() {
+    const firstPacket = new InputNumber(null, NaN, true);
+    firstPacket.children.push(new InputNumber(firstPacket, NaN, true));
+    firstPacket.children[0].children.push(new InputNumber(firstPacket.children[0], 2, false));
+    const secondPacket = new InputNumber(null, NaN, true);
+    secondPacket.children.push(new InputNumber(secondPacket, NaN, true));
+    secondPacket.children[0].children.push(new InputNumber(secondPacket.children[0], 6, false));
+    return [firstPacket, secondPacket];
 }
 
 const input = fs.readFileSync('input.txt', 'utf8').split('\r\n');
 if (input[input.length - 1].length === 0) input.pop();
-const parsedInput = parseInput(input);
+let parsedInput = parseInput(input);
 console.log(countOrdered(parsedInput));
+parsedInput = parseInput(input);
+console.log(calculateIndexCoef(parsedInput));
