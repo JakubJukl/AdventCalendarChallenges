@@ -3,44 +3,6 @@ const fs = require('fs');
 const BEACON = 'B';
 const SENSOR = 'S';
 
-function populateUnavailable(sX, sY, y, beacons, tillInc, tillDec) {
-    for (let x = sX; x <= tillInc; x++) {
-        if (!beacons[y]) beacons[y] = {};
-        if (!beacons[y][x]) beacons[y][x] = '#';
-    }
-    for (let x = sX; x >= tillDec; x--) {
-        if (!beacons[y]) beacons[y] = {};
-        if (!beacons[y][x]) beacons[y][x] = '#';
-    }
-}
-
-function loadBeacons(inputRows) {
-    const beacons = {};
-    for (let i = 0; i < inputRows.length; i++) {
-        const [sX, sY, bX, bY] = inputRows[i].match(/-?\d+/g).map(Number);
-        if (!beacons[sY]) beacons[sY] = {};
-        beacons[sY][sX] = SENSOR;
-        if (!beacons[bY]) beacons[bY] = {};
-        beacons[bY][bX] = BEACON;
-
-        const [minX, maxX] = [Math.min(sX, bX), Math.max(sX, bX)];
-        const [minY, maxY] = [Math.min(sY, bY), Math.max(sY, bY)];
-        const distance = Math.abs(maxX - minX) + Math.abs(maxY - minY);
-
-        for (let y = sY; y <= sY + distance; y++) {
-            const tillInc = sX + distance - (y - sY);
-            const tillDec = sX - distance + (y - sY);
-            populateUnavailable(sX, sY, y, beacons, tillInc, tillDec);
-        }
-        for (let y = sY; y >= sY - distance; y--) {
-            const tillInc = sX + distance - (sY - y);
-            const tillDec = sX - distance + (sY - y);
-            populateUnavailable(sX, sY, y, beacons, tillInc, tillDec);
-        }
-    }
-    return beacons;
-}
-
 class Sensor {
     constructor(x, y, beacon) {
         this.x = x;
@@ -116,7 +78,50 @@ function countUnavailableAtLine(inputRows, y) {
     return count;
 }
 
+function isDistressBeacon(sensors, x, y, i) {
+    for (let j = 0; j < sensors.length; j++) {
+        if (j !== i) {
+            const otherSensor = sensors[j];
+            if (isInDistance(x, y, otherSensor.x, otherSensor.y, otherSensor.distance)) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+function findDistressBeaconLocation(sensors, leftEdge, rightEdge) {
+    for (let i = 0; i < sensors.length; i++) {
+        const sensor = sensors[i];
+        for (let y = sensor.y; y <= sensor.y + sensor.distance + 1; y++) {
+            if (y >= leftEdge && y <= rightEdge) {
+                const xCoords = [sensor.x + sensor.distance + 1 - (y - sensor.y),
+                    sensor.x - sensor.distance - 1 + (y - sensor.y)]
+                for (let x of xCoords) {
+                    if (x >= leftEdge && x <= rightEdge && isDistressBeacon(sensors, x, y, i)) return [x, y];
+                }
+            }
+        }
+        for (let y = sensor.y; y >= sensor.y - sensor.distance - 1; y--) {
+            if (y >= leftEdge && y <= rightEdge) {
+                const xCoords = [sensor.x + sensor.distance  + 1 - (sensor.y - y),
+                    sensor.x - sensor.distance - 1 + (sensor.y - y)];
+                for (let x of xCoords) {
+                    if (x >= leftEdge && x <= rightEdge && isDistressBeacon(sensors, x, y, i)) return [x, y];
+                }
+            }
+        }
+    }
+}
+
+function findDistressBeaconTuningFrequency(inputRows, leftEdge, rightEdge) {
+    const sensors = loadSensorsToArray(inputRows);
+    const [x, y] = findDistressBeaconLocation(sensors, leftEdge, rightEdge);
+    return x * 4000000 + y;
+}
+
 const input = fs.readFileSync('input.txt', 'utf8').split('\r\n');
 if (input[input.length - 1].length === 0) input.pop();
 
 console.log(countUnavailableAtLine(input, 2000000));
+console.log(findDistressBeaconTuningFrequency(input, 0, 4000000));
